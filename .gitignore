@@ -1,0 +1,24 @@
+# VS Code settings
+.vscode/
+
+# Contiki-NG & COOJA compiled files
+*.o
+*.out
+*.elf
+*.bin
+*.cooja
+
+# Node-RED auto-generated data
+temp.json
+log.json
+
+# MQTT & Mosquitto logs
+mosquitto.log
+
+# Backup files
+*.bak
+*.swp
+
+# System files
+.DS_Store
+Thumbs.db

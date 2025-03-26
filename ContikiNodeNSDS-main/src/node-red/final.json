@@ -1,0 +1,396 @@
+[
+    {
+        "id": "b68dac2323405fc5",
+        "type": "tab",
+        "label": "Final",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "30520812ddfdd6ce",
+        "type": "file",
+        "z": "b68dac2323405fc5",
+        "name": "",
+        "filename": "/Users/bruno/Desktop/NDS/NodeRed/log.json",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 1460,
+        "y": 180,
+        "wires": [
+            [
+                "2c23feb87a1d69ad",
+                "bbb8e6afc23aae87"
+            ]
+        ]
+    },
+    {
+        "id": "2c23feb87a1d69ad",
+        "type": "e-mail",
+        "z": "b68dac2323405fc5",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "authtype": "BASIC",
+        "saslformat": false,
+        "token": "",
+        "secure": true,
+        "tls": false,
+        "name": "omdxtc@telegmail.com",
+        "dname": "Send Mail!",
+        "x": 1830,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "d9019069f0db4a93",
+        "type": "json",
+        "z": "b68dac2323405fc5",
+        "name": "save_temp_file",
+        "property": "payload",
+        "action": "str",
+        "pretty": true,
+        "x": 700,
+        "y": 520,
+        "wires": [
+            [
+                "dd1a9e97172be219"
+            ]
+        ]
+    },
+    {
+        "id": "dd1a9e97172be219",
+        "type": "file",
+        "z": "b68dac2323405fc5",
+        "name": "",
+        "filename": "C:\\Users\\Chris\\polimi\\NSDS\\NSDS_Contiki_Node\\files\\temp.json",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 920,
+        "y": 620,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5f145a865befa923",
+        "type": "function",
+        "z": "b68dac2323405fc5",
+        "name": "filter_null_msg_change",
+        "func": "if(msg!=null) return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 380,
+        "wires": [
+            [
+                "d9019069f0db4a93"
+            ]
+        ]
+    },
+    {
+        "id": "596e20db20333f05",
+        "type": "function",
+        "z": "b68dac2323405fc5",
+        "name": "compute_temperature_humidity",
+        "func": "let change_msg = null;\nlet month_msg = null;\n\nif (msg.topic != 'nsds-iot-contiki' && context.get(\"is_ready\") == 0) {\n    context.set(\"current_day\", msg.payload.current_day);\n    context.set(\"current_month\", msg.payload.current_month);\n    context.set(\"current_year\", msg.payload.current_year);\n    context.set(\"current_day_temp\", msg.payload.current_day_temp);\n    context.set(\"current_day_humidity\", msg.payload.current_day_humidity);\n    context.set(\"max_temp\", msg.payload.max_temp);\n    context.set(\"min_temp\", msg.payload.min_temp);\n    context.set(\"max_humidity\", msg.payload.max_humidity);\n    context.set(\"min_humidity\", msg.payload.min_humidity);\n    context.set(\"max_temp_day\", msg.payload.max_temp_day);\n    context.set(\"min_temp_day\", msg.payload.min_temp_day);\n    context.set(\"max_humidity_day\", msg.payload.max_humidity_day);\n    context.set(\"min_humidity_day\", msg.payload.min_humidity_day);\n    context.set(\"reading\", msg.payload.reading);\n    context.set(\"is_ready\", 1);\n}\nelse if (msg.topic == \"nsds-iot-contiki\" && context.get(\"is_ready\") == 1) {\n    if (msg.payload.day == context.get(\"current_day\")) {\n        context.set(\"current_day_temp\", context.get(\"current_day_temp\") + msg.payload.temp);\n        context.set(\"current_day_humidity\", context.get(\"current_day_humidity\") + msg.payload.temp);\n        context.set(\"reading\", context.get(\"reading\") + 1);\n        change_msg = {\n            topic: msg.topic,\n            payload: {\n                current_month: context.get(\"current_month\"),\n                current_year: context.get(\"current_year\"),\n                current_day: context.get(\"current_day\"),\n                max_temp: context.get(\"max_temp\"),\n                min_temp: context.get(\"min_temp\"),\n                max_humidity: context.get(\"max_humidity\"),\n                min_humidity: context.get(\"min_humidity\"),\n                max_temp_day: context.get(\"max_temp_day\"),\n                min_temp_day: context.get(\"min_temp_day\"),\n                max_humidity_day: context.get(\"max_humidity_day\"),\n                min_humidity_day: context.get(\"min_humidity_day\"),\n                current_day_temp: context.get(\"current_day_temp\"),\n                current_day_humidity: context.get(\"current_day_humidity\"),\n                reading: context.get(\"reading\")\n            }\n        }\n    }\n    if (msg.payload.day != context.get(\"current_day\") && msg.payload.day != context.get(\"last_day\") ) {\n        if (context.get(\"reading\") == 0) {\n            context.set(\"reading\", 1);\n        }\n        var avg_temp = context.get(\"current_day_temp\") / context.get(\"reading\");\n        var avg_humidity = context.get(\"current_day_humidity\") / context.get(\"reading\");\n      \n        if (avg_temp > context.get(\"max_temp\")){\n            context.set(\"max_temp\", avg_temp);\n            context.set(\"max_temp_day\", context.get(\"current_day\"));\n        } \n        if (avg_temp < context.get(\"min_temp\")){\n            context.set(\"min_temp\", avg_temp);\n            context.set(\"min_temp_day\", context.get(\"current_day\"));\n        } \n        if (avg_humidity > context.get(\"max_humidity\")){\n            context.set(\"max_humidity\", avg_humidity);\n            context.set(\"max_humidity_day\", context.get(\"current_day\"));\n        } \n        if (avg_humidity < context.get(\"min_humidity\")){\n            context.set(\"min_humidity\", avg_humidity);\n            context.set(\"min_humidity_day\", context.get(\"current_day\"));\n        } \n        \n        change_msg = {\n            topic: msg.topic,\n            payload: {\n                current_month: context.get(\"current_month\"),\n                current_year: context.get(\"current_year\"),\n                current_day: context.get(\"current_day\"),\n                max_temp: context.get(\"max_temp\"),\n                min_temp: context.get(\"min_temp\"),\n                max_humidity: context.get(\"max_humidity\"),\n                min_humidity: context.get(\"min_humidity\"),\n                max_temp_day: context.get(\"max_temp_day\"),\n                min_temp_day: context.get(\"min_temp_day\"),\n                max_humidity_day: context.get(\"max_humidity_day\"),\n                min_humidity_day: context.get(\"min_humidity_day\"),\n                current_day_temp: context.get(\"current_day_temp\"),\n                current_day_humidity: context.get(\"current_day_humidity\"),\n                reading: context.get(\"reading\")\n            }\n        }\n\n        context.set(\"current_day_temp\", msg.payload.temp);\n        context.set(\"current_day_humidity\", msg.payload.hum);\n        context.set(\"current_day\", msg.payload.day);\n        context.set(\"reading\", 1);\n    }\n    if (msg.payload.month != context.get(\"current_month\")) {\n        month_msg = {\n            topic: msg.topic,\n            payload: {\n                current_month: context.get(\"current_month\"),\n                current_year: context.get(\"current_year\"),\n                current_day: context.get(\"current_day\"),\n                max_temp: context.get(\"max_temp\"),\n                min_temp: context.get(\"min_temp\"),\n                max_humidity: context.get(\"max_humidity\"),\n                min_humidity: context.get(\"min_humidity\"),\n                max_temp_day: context.get(\"max_temp_day\"),\n                min_temp_day: context.get(\"min_temp_day\"),\n                max_humidity_day: context.get(\"max_humidity_day\"),\n                min_humidity_day: context.get(\"min_humidity_day\")\n            }\n        }\n        context.set(\"last_day\", context.get(\"current_day\"));\n        context.set(\"current_day\", msg.payload.day);\n        context.set(\"current_month\", msg.payload.month);\n        context.set(\"current_year\", msg.payload.year);\n        context.set(\"max_temp\", 0);\n        context.set(\"min_temp\", 100);\n        context.set(\"max_humidity\", 0);\n        context.set(\"min_humidity\", 100);\n        context.set(\"max_temp_day\", 0);\n        context.set(\"min_temp_day\", 0);\n        context.set(\"max_humidity_day\", 0);\n        context.set(\"min_humidity_day\", 0);\n\n    }\n\n    return [month_msg, change_msg];\n}",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is started.\ncontext.set(\"current_day\", null)\ncontext.set(\"current_month\", null)\ncontext.set(\"current_year\", null)\ncontext.set(\"current_day_temp\", null)\ncontext.set(\"current_day_humidity\", null)\ncontext.set(\"max_temp\", null)\ncontext.set(\"min_temp\", null)\ncontext.set(\"max_humidity\", null)\ncontext.set(\"min_humidity\", null)\ncontext.set(\"max_temp_day\", null)\ncontext.set(\"min_temp_day\", null)\ncontext.set(\"max_humidity_day\", null)\ncontext.set(\"min_humidity_day\", null)\ncontext.set(\"reading\", null)\ncontext.set(\"is_ready\", 0)\ncontext.set(\"last_day\", 0)",
+        "finalize": "",
+        "libs": [],
+        "x": 730,
+        "y": 240,
+        "wires": [
+            [
+                "e12b3122c6ca7a7a"
+            ],
+            [
+                "5f145a865befa923"
+            ]
+        ]
+    },
+    {
+        "id": "380aca93294fce71",
+        "type": "inject",
+        "z": "b68dac2323405fc5",
+        "name": "prestart",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 230,
+        "y": 760,
+        "wires": [
+            [
+                "b05e576c7ca4c364"
+            ]
+        ]
+    },
+    {
+        "id": "b05e576c7ca4c364",
+        "type": "function",
+        "z": "b68dac2323405fc5",
+        "name": "store_base_values",
+        "func": "msg = {\n    payload: {\n    current_day: 1,\n    current_month: 1,\n    current_year: 2000,\n    current_day_temp: 0,\n    current_day_humidity: 0,\n    max_temp: 0,\n    min_temp: 100,\n    max_humidity: 0,\n    min_humidity: 100,\n    max_temp_day: 0,\n    min_temp_day: 0,\n    max_humidity_day: 0,\n    min_humidity_day: 0,\n    reading:0\n    }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 760,
+        "wires": [
+            [
+                "20750a1588735e9a"
+            ]
+        ]
+    },
+    {
+        "id": "f24ecd2b793d0ac5",
+        "type": "file",
+        "z": "b68dac2323405fc5",
+        "name": "",
+        "filename": "/Users/bruno/Desktop/NDS/NodeRed/temp.json",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 1030,
+        "y": 760,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "20750a1588735e9a",
+        "type": "json",
+        "z": "b68dac2323405fc5",
+        "name": "save_temp_file_base_values",
+        "property": "payload",
+        "action": "str",
+        "pretty": true,
+        "x": 660,
+        "y": 760,
+        "wires": [
+            [
+                "f24ecd2b793d0ac5"
+            ]
+        ]
+    },
+    {
+        "id": "9674717c50240b20",
+        "type": "file in",
+        "z": "b68dac2323405fc5",
+        "name": "",
+        "filename": "/Users/bruno/Desktop/NDS/NodeRed/temp.json",
+        "filenameType": "str",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "utf8",
+        "allProps": false,
+        "x": 390,
+        "y": 120,
+        "wires": [
+            [
+                "f54cb38e8e7664b1"
+            ]
+        ]
+    },
+    {
+        "id": "f54cb38e8e7664b1",
+        "type": "json",
+        "z": "b68dac2323405fc5",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 470,
+        "y": 240,
+        "wires": [
+            [
+                "596e20db20333f05"
+            ]
+        ]
+    },
+    {
+        "id": "0ca994f9e0e56b57",
+        "type": "mqtt in",
+        "z": "b68dac2323405fc5",
+        "name": "contiki-MQTT",
+        "topic": "iot/native/launchpad/json",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "5b3ddf093fdf1ef4",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 210,
+        "y": 360,
+        "wires": [
+            [
+                "bec6d4d1a3405553",
+                "9674717c50240b20"
+            ]
+        ]
+    },
+    {
+        "id": "bec6d4d1a3405553",
+        "type": "json",
+        "z": "b68dac2323405fc5",
+        "name": "",
+        "property": "payload",
+        "action": "obj",
+        "pretty": false,
+        "x": 270,
+        "y": 440,
+        "wires": [
+            [
+                "c86b427f960dac9c"
+            ]
+        ]
+    },
+    {
+        "id": "c86b427f960dac9c",
+        "type": "function",
+        "z": "b68dac2323405fc5",
+        "name": "rename_topic",
+        "func": "let new_msg={\n    topic: \"nsds-iot-contiki\",\n    payload: msg.payload\n}\nreturn new_msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 440,
+        "wires": [
+            [
+                "596e20db20333f05"
+            ]
+        ]
+    },
+    {
+        "id": "e6fa780d076f1140",
+        "type": "json",
+        "z": "b68dac2323405fc5",
+        "name": "temp",
+        "property": "payload",
+        "action": "str",
+        "pretty": true,
+        "x": 1330,
+        "y": 320,
+        "wires": [
+            [
+                "30520812ddfdd6ce",
+                "bbb8e6afc23aae87"
+            ]
+        ]
+    },
+    {
+        "id": "bbb8e6afc23aae87",
+        "type": "debug",
+        "z": "b68dac2323405fc5",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1580,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "58f0db796ba94eee",
+        "type": "function",
+        "z": "b68dac2323405fc5",
+        "name": "prepare_log_line",
+        "func": "msg.payload = \"max temp for \" + msg.payload.current_month + \"/\" + msg.payload.current_year + \" is \" + msg.payload.max_temp + \" °C on day: \"+ msg.payload.max_temp_day +\", the min is \" + msg.payload.min_temp + \"°C on day: \" + msg.payload.min_temp_day + \", max humidity is \" + msg.payload.max_humidity + \"% on day: \"+ msg.payload.max_humidty_day + \" min humidity is \" + msg.payload.min_humidity + \"% on day: \"+ msg.payload.min_humidity_day + \".\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1280,
+        "y": 380,
+        "wires": [
+            [
+                "e6fa780d076f1140"
+            ]
+        ]
+    },
+    {
+        "id": "e12b3122c6ca7a7a",
+        "type": "function",
+        "z": "b68dac2323405fc5",
+        "name": "filter_null_msg",
+        "func": "if(msg!=null) return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1060,
+        "y": 320,
+        "wires": [
+            [
+                "58f0db796ba94eee"
+            ]
+        ]
+    },
+    {
+        "id": "5b3ddf093fdf1ef4",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "mqtt.neslab.it",
+        "port": "3200",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]
