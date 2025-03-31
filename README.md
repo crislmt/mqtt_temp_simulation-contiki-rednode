@@ -64,3 +64,8 @@ The system simulates real-world IoT device behavior by collecting and analyzing 
 - [Contiki NG Documentation](https://github.com/contiki-ng/contiki-ng/wiki)
 - [Node-RED Documentation](https://nodered.org/docs/)
 
+## Contributors
+- Bruno Morelli
+- Cristian Lo Muto
+- Vincenzo Martelli
+
